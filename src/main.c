@@ -1,49 +1,67 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-void crypt(char input[], int shift) {
+char* crypt(char input[], int shift, int space_pref) {
+    int len = strlen(input);
+    char *output = (char*) malloc((len + 1) * sizeof(char));
+
+    if (output == NULL) {
+        printf("Memory allocation failed!\n");
+        return NULL;
+    }
+
+    int output_index = 0;
     for(int i = 0; input[i] != '\0'; i++) {
         char currentChar = input[i];
-        int index;
 
         if(isspace(currentChar)) {
+            if(space_pref == 1) {
+                output[output_index++] = currentChar;
+            }
             continue;
         }
+
         // Check if currentChar is uppercase or lowercase
         if(currentChar >= 'A' && currentChar <= 'Z') {
-            index = currentChar - 'A';
+            output[output_index++] = 'A' + (currentChar - 'A' + shift + 26) % 26;
         } else if(currentChar >= 'a' && currentChar <= 'z'){
-            index = currentChar - 'a';
-        }
-        if(index) {
-            printf("Current character: %c  | Index: %d\n", currentChar, index);
+            output[output_index++] = 'a' + (currentChar - 'a' + shift + 26) % 26;
         }
     }
+    output[output_index] = '\0';
+    return output;
 }
 
 int main() {
-    int option;
-    int shift;
-    char input[200];
-    char output[sizeof(input)];
+    int option, shift, space_pref;
+    char *input = NULL;
+    size_t input_size = 0;
 
     printf("Select\n1 > Encrypt\n2 > Decrypt\n");
     scanf("%d", &option);
     getchar();
 
+    printf("Select\n1 > Include spaces\n2 > Ignore spaces\n");
+    scanf("%d", &space_pref);
+    getchar();
+
     printf("Input text\n");
-    fgets(input, sizeof(input), stdin);
+    getline(&input, &input_size, stdin); // Reads the input length and assigns it to input_size
     input[strcspn(input, "\n")] = '\0';
 
     printf("Input shift\n");
     scanf("%d", &shift);
 
-    if(input[0] != '\0') {
-        if(option == 1) {
-            crypt(input, shift);
-        } else if(option == 2) {
-            crypt(input, -shift);
+    if (input[0] != '\0') {
+        char* output = crypt(input, (option == 2 ? -shift : shift), space_pref);
+        if (output != NULL) {
+            printf("%s\n", output);
+            free(output);
         }
     }
+
+    free(input);
+    return 0;
 }
